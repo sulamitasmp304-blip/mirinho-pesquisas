@@ -1,0 +1,5 @@
+node_modules/
+dist/
+preview.html
+src/preview.jsx
+src/preview-data.json
