@@ -1,6 +1,7 @@
 import { buildPdfHtml, RODAPE } from './pdf';
 import CapaEditor from './CapaEditor';
 import { rotuloGrafico } from './capa';
+import { agruparPesquisa, normalizarResposta } from './respostas';
 import { useState, useEffect, useCallback } from "react";
 import ImportarExcel from './ImportarExcel';
 
@@ -19,7 +20,8 @@ const sb = {
   get: async (table, params="") => {
     const r = await fetch(`${SB_URL}/rest/v1/${table}?${params}`, { headers: sbHeaders });
     if (!r.ok) throw new Error(await r.text());
-    return r.json();
+    const dados = await r.json();
+    return table === 'pesquisas' ? dados.map(agruparPesquisa) : dados;
   },
   post: async (table, body) => {
     const r = await fetch(`${SB_URL}/rest/v1/${table}`, { method:"POST", headers: sbHeaders, body: JSON.stringify(body) });
@@ -1366,7 +1368,8 @@ const AppEntrevistadora = ({ user, onLogout, pesquisas: pesquisasProps }) => {
         } else {
           const atual = obj[key] || { votos: {}, contagem: {}, total: 0 };
           const contagem = { ...atual.contagem };
-          contagem[resposta] = (contagem[resposta] || 0) + 1;
+          const categoria = normalizarResposta(resposta);
+          contagem[categoria] = (contagem[categoria] || 0) + 1;
           const total = (atual.total || 0) + 1;
           const novosVotos = {};
           Object.entries(contagem).forEach(([k, v]) => {

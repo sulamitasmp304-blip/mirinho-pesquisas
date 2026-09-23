@@ -1,9 +1,11 @@
 import { dadosDaCapa, rotuloGrafico } from './capa.js';
+import { agruparPesquisa } from './respostas.js';
 const CORES_G = ["#00b4d8","#4a4e69","#f4a261","#2ec4b6","#e63946","#8338ec","#06d6a0","#ffb703"];
 const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 export const RODAPE = "A empresa Mirinho Tribuna não autoriza o contratante ou qualquer pessoa a levar este trabalho ao conhecimento público, seja qual for a forma, de acordo com a lei eleitoral.";
 
 export const buildPdfHtml = (p, fmtD, edicoesCapa = {}) => {
+  p = agruparPesquisa(p);
   const paginas = [];
   const capa = dadosDaCapa(p, edicoesCapa);
   const simulando = Boolean(p.simulacao?.perguntas?.length);

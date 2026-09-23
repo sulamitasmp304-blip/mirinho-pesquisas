@@ -1,4 +1,5 @@
 import { read, utils } from 'xlsx';
+import { normalizarResposta } from './respostas.js';
 
 const text = v => String(v ?? '').trim().replace(/\s+/g, ' ');
 const key = v => text(v).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
@@ -42,7 +43,7 @@ export function gerarPesquisa(modelo, destinos, cidade) {
   const grupos = resumir(modelo, destinos);
   const nomes = new Map(grupos.map(g => [key(g.nome), g.nome]));
   const mapa = new Map(modelo.setores.map((s, i) => [s.nome, nomes.get(key(destinos[i]))]));
-  const perguntas = modelo.perguntas.map((q, i) => ({ id: i + 1, texto: q.texto.replace(/^\d+\s*[-–.)]\s*/, ''), tipo: /nota.*0.*10/i.test(q.texto) ? 'nota' : 'multipla', opcoes: [...new Set(modelo.rows.map(r => text(r[q.coluna])).filter(Boolean))] }));
+  const perguntas = modelo.perguntas.map((q, i) => ({ id: i + 1, texto: q.texto.replace(/^\d+\s*[-–.)]\s*/, ''), tipo: /nota.*0.*10/i.test(q.texto) ? 'nota' : 'multipla', opcoes: [...new Set(modelo.rows.map(r => normalizarResposta(r[q.coluna])).filter(Boolean))] }));
   const resultados = { _por_bairro: Object.create(null) };
   grupos.forEach(g => { resultados._por_bairro[g.nome] = Object.create(null); });
   const adicionar = (obj, q, valor) => {
@@ -55,7 +56,7 @@ export function gerarPesquisa(modelo, destinos, cidade) {
       obj[q.id] = atual;
     } else {
       const atual = obj[q.id] || { contagem: Object.create(null), votos: Object.create(null), total: 0 };
-      const v = text(valor); atual.contagem[v] = (atual.contagem[v] || 0) + 1; atual.total++;
+      const v = normalizarResposta(valor); atual.contagem[v] = (atual.contagem[v] || 0) + 1; atual.total++;
       obj[q.id] = atual;
     }
   };

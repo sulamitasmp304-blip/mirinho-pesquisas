@@ -1,3 +1,4 @@
+import { normalizarResposta } from './respostas.js';
 export function dadosDaCapa(pesquisa, edicoes = {}) {
   return {
     cidade: edicoes.cidade ?? pesquisa.cidade ?? '',
@@ -8,5 +9,5 @@ export function dadosDaCapa(pesquisa, edicoes = {}) {
 }
 
 export function rotuloGrafico(nome) {
-  return /^brancos\s*\/\s*nulos\s*\/\s*indecisos$/i.test(String(nome).trim()) ? 'B/NU/IND' : nome;
+  return normalizarResposta(nome);
 }

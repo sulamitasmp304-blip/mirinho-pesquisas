@@ -4,6 +4,7 @@ import { analisar, gerarPesquisa, resumir } from './importacao.js';
 import { pesquisaSimulada, redistribuirPercentuais } from './simulacao.js';
 import { buildPdfHtml } from './pdf.js';
 import { dadosDaCapa, rotuloGrafico } from './capa.js';
+import { normalizarResposta, agruparResultado, agruparPesquisa } from './respostas.js';
 
 const linhas = [
   ['Carimbo de data/hora', 'Setor', '1- QUE NOTA DE 0 A 10?', '2- VOTARIA NOVAMENTE?', '3- CENÁRIO?', '4- CENÁRIO?'],
@@ -73,4 +74,32 @@ test('edições da capa não alteram perguntas, contagens, percentuais ou setore
   assert.equal(dadosDaCapa(p,{totalEntrevistas:0}).totalEntrevistas,0);
   assert.equal(rotuloGrafico('BRANCOS/NULOS/INDECISOS'),'B/NU/IND');
   assert.equal(rotuloGrafico('Outro nome comprido'),'Outro nome comprido');
+});
+
+test('regra B/NU/IND junta respostas por contagem sem incluir NÃO ou respostas vazias', () => {
+  const equivalentes = ['Não sabe','Nenhum','Ninguém','Branco','Não tem','Não lembra o nome','Não sei','BRANCOS/NULOS/INDECISOS','B/NU/IND','  NAO   SEI  '];
+  equivalentes.forEach(v => assert.equal(normalizarResposta(v), 'B/NU/IND'));
+  ['NÃO','NÃO VOTEI NELE','Candidato Nenhum Silva',''].forEach(v => assert.equal(normalizarResposta(v),v));
+  const m = analisar([['Setor','1- Em quem votaria?'],...equivalentes.map(v=>['Centro',v]),['Outro','SIM'],['Outro','NÃO'],['Outro','']]);
+  const p = gerarPesquisa(m,['Centro','Outro'],'Cidade');
+  assert.equal(p.totalEntrevistas,13);
+  assert.equal(p.resultados[1].contagem['B/NU/IND'],10);
+  assert.equal(p.resultados[1].total,12);
+  assert.equal(p.resultados[1].votos['B/NU/IND'],83.3);
+  assert.equal(p.resultados._por_bairro.Centro[1].votos['B/NU/IND'],100);
+  assert.equal(p.resultados._por_bairro.Outro[1].votos['NÃO'],50);
+  assert.deepEqual(p.perguntas[0].opcoes,['B/NU/IND','SIM','NÃO']);
+});
+
+test('resultados anteriores agrupam quantidades antes de arredondar; simulações são preservadas', () => {
+  const r={contagem:{'Não sabe':1,'Nenhum':1,SIM:1},votos:{'Não sabe':33.3,'Nenhum':33.3,SIM:33.3},total:3};
+  const antes=JSON.stringify(r);
+  assert.equal(agruparResultado(r).votos['B/NU/IND'],66.7);
+  assert.equal(agruparResultado({...r,votos:{'Não sabe':10,Nenhum:20,SIM:70}},true).votos['B/NU/IND'],30);
+  assert.equal(agruparResultado({votos:{'Não sei':5,Branco:10,SIM:85}}).votos['B/NU/IND'],15);
+  const p={perguntas:[],resultados:{1:r,_por_bairro:{Centro:{1:r}}}};
+  const grouped=agruparPesquisa(p);
+  assert.equal(grouped.resultados._por_bairro.Centro[1].contagem['B/NU/IND'],2);
+  assert.deepEqual(agruparPesquisa(grouped),grouped);
+  assert.equal(JSON.stringify(r),antes);
 });
