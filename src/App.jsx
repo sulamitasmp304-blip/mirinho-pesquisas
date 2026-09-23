@@ -1,4 +1,6 @@
 import { buildPdfHtml, RODAPE } from './pdf';
+import CapaEditor from './CapaEditor';
+import { rotuloGrafico } from './capa';
 import { useState, useEffect, useCallback } from "react";
 import ImportarExcel from './ImportarExcel';
 
@@ -101,8 +103,8 @@ const GBarras = ({ dados }) => {
     <div style={{ padding:"8px 0" }}>
       {entries.map(([nome,pct],i)=>(
         <div key={nome} style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8 }}>
-          <div style={{ width:130, fontSize:11, color:"#555", textAlign:"right", flexShrink:0 }}>{nome}</div>
-          <div style={{ flex:1, background:"#F1EFE8", borderRadius:4, height:20, overflow:"hidden" }}>
+          <div style={{ width:130, fontSize:11, color:"#555", textAlign:"right", flexShrink:0, overflowWrap:"anywhere", lineHeight:1.4 }}>{rotuloGrafico(nome)}</div>
+          <div style={{ flex:1, minWidth:0, background:"#F1EFE8", borderRadius:4, height:20, overflow:"hidden" }}>
             <div style={{ width:`${(pct/max)*100}%`, height:"100%", background:CORES_G[i%CORES_G.length], borderRadius:4 }}/>
           </div>
           <div style={{ width:42, fontSize:11, color:"#555", flexShrink:0 }}>{pct}%</div>
@@ -1062,6 +1064,7 @@ const Financeiro = ({ pesquisas, setPesquisas, users }) => {
 // ─── PDF ──────────────────────────────────────────────────────────────────────
 const PDFGerador = ({ pesquisas }) => {
   const [sel,setSel]=useState("");
+  const [capa,setCapa]=useState({});
   const [gerado,setGerado]=useState(false);
   const [salvando,setSalvando]=useState(false);
   const [pdfsHistorico,setPdfsHistorico]=useState([]);
@@ -1076,7 +1079,7 @@ const PDFGerador = ({ pesquisas }) => {
 
   const baixarPDF = async () => {
     if(!p) return;
-    const html = buildPdfHtml(p, fmtD);
+    const html = buildPdfHtml(p, fmtD, capa);
     const win = window.open("","_blank");
     if(!win) { alert("Permita pop-ups para baixar o PDF."); return; }
     win.document.write(html);
@@ -1109,7 +1112,7 @@ const PDFGerador = ({ pesquisas }) => {
       <div style={{ fontSize:16, fontWeight:600, marginBottom:16 }}>Gerador de PDF</div>
       <Card>
         <ST>Selecione a pesquisa</ST>
-        <select value={sel} onChange={e=>{setSel(e.target.value);setGerado(false);}} style={{ width:"100%", fontSize:13, padding:"9px 10px", border:"1px solid #DDD", borderRadius:8, fontFamily:"inherit", marginBottom:14 }}>
+        <select value={sel} onChange={e=>{setSel(e.target.value);setGerado(false);setCapa({});}} style={{ width:"100%", fontSize:13, padding:"9px 10px", border:"1px solid #DDD", borderRadius:8, fontFamily:"inherit", marginBottom:14 }}>
           <option value="">Escolha uma pesquisa...</option>
           {pesquisas.map(x=><option key={x.id} value={x.id}>{x.cidade} — {fmtD(x.dataInicio)}</option>)}
         </select>
@@ -1127,6 +1130,7 @@ const PDFGerador = ({ pesquisas }) => {
           <Btn v="green" onClick={baixarPDF} disabled={!p||salvando} style={{ flex:1 }}>{salvando?"Salvando...":"⬇ Baixar PDF"}</Btn>
         </div>
         {p&&<div style={{ fontSize:11, color:"#888", marginTop:8, textAlign:"center" }}>O PDF abre numa nova aba — use Ctrl+P (ou Cmd+P) para salvar como PDF.</div>}
+        {p&&<CapaEditor pesquisa={p} value={capa} onChange={setCapa}/>}
       </Card>
 
       {gerado&&p&&(
@@ -1135,53 +1139,7 @@ const PDFGerador = ({ pesquisas }) => {
             <div style={{ fontSize:13, fontWeight:600, color:"#1D9E75" }}>✓ Prévia — {p.cidade}</div>
             <Btn v="green" onClick={baixarPDF}>⬇ Baixar PDF</Btn>
           </div>
-          {/* CAPA */}
-          <div style={{ background:"#fff", border:"1px solid #E8E6DF", borderRadius:12, padding:"36px 32px", marginBottom:12, textAlign:"center" }}>
-            <div style={{ fontSize:26, fontWeight:900, letterSpacing:2, marginBottom:6 }}>MIRINHO TRIBUNA</div>
-            <div style={{ fontSize:12, color:"#666", marginBottom:32 }}>Pesquisas – Enquetes – Sondagens</div>
-            <div style={{ fontSize:48, fontWeight:900, margin:"20px 0" }}>{p.cidade.toUpperCase()}</div>
-            <div style={{ fontSize:14, fontWeight:600, marginTop:24 }}>Realizada em: {fmtD(p.dataInicio)}{p.dataFim&&p.dataFim!==p.dataInicio?` e ${fmtD(p.dataFim)}`:""} ({p.totalEntrevistas} entrevistas)</div>
-            <div style={{ fontSize:10, color:"#aaa", marginTop:32, borderTop:"1px solid #eee", paddingTop:12, fontStyle:"italic" }}>{RODAPE}</div>
-          </div>
-          {/* BLOCO GERAL */}
-          <div style={{ fontSize:13, fontWeight:700, color:"#888", textTransform:"uppercase", letterSpacing:"0.05em", margin:"16px 0 8px", paddingLeft:4 }}>📊 Geral</div>
-          {p.perguntas.map((perg,i)=>{
-            const key=String(perg.id!==undefined?perg.id:i);
-            const r=p.resultados?.[key];
-            return (
-              <div key={i} style={{ background:"#fff", border:"1px solid #E8E6DF", borderRadius:12, padding:"24px 28px", marginBottom:12 }}>
-                <div style={{ fontSize:14, fontWeight:700, marginBottom:16 }}>{i+1}- {perg.texto}</div>
-                {perg.tipo==="nota"&&r&&<div style={{ display:"flex", flexDirection:"column", alignItems:"center" }}><div style={{ fontSize:13, fontWeight:600, marginBottom:4 }}>Geral</div><GRosca nota={r.media}/></div>}
-                {(perg.tipo==="multipla"||perg.tipo==="confronto"||perg.tipo==="aberta")&&r?.votos&&<div><div style={{ fontSize:13, fontWeight:600, marginBottom:8, textAlign:"center" }}>Geral</div><GBarras dados={r.votos}/></div>}
-                {!r&&<div style={{ fontSize:12, color:"#aaa", textAlign:"center", padding:"20px 0" }}>Sem resultados.</div>}
-                <div style={{ fontSize:10, color:"#aaa", marginTop:16, borderTop:"1px solid #eee", paddingTop:10, textAlign:"center", fontStyle:"italic" }}>{RODAPE}</div>
-              </div>
-            );
-          })}
-
-          {/* BLOCOS POR BAIRRO */}
-          {p.bairros.map(b=>{
-            const resBairro=(p.resultados?._por_bairro||{})[b.nome];
-            if(!resBairro) return null;
-            return (
-              <div key={b.nome}>
-                <div style={{ fontSize:13, fontWeight:700, color:"#888", textTransform:"uppercase", letterSpacing:"0.05em", margin:"20px 0 8px", paddingLeft:4 }}>📍 {b.nome}</div>
-                {p.perguntas.map((perg,i)=>{
-                  const key=String(perg.id!==undefined?perg.id:i);
-                  const r=resBairro[key];
-                  return (
-                    <div key={i} style={{ background:"#fff", border:"1px solid #E8E6DF", borderRadius:12, padding:"24px 28px", marginBottom:12 }}>
-                      <div style={{ fontSize:14, fontWeight:700, marginBottom:16 }}>{i+1}- {perg.texto}</div>
-                      {perg.tipo==="nota"&&r&&<div style={{ display:"flex", flexDirection:"column", alignItems:"center" }}><div style={{ fontSize:13, fontWeight:600, marginBottom:4 }}>{b.nome}</div><GRosca nota={r.media}/></div>}
-                      {(perg.tipo==="multipla"||perg.tipo==="confronto"||perg.tipo==="aberta")&&r?.votos&&<div><div style={{ fontSize:13, fontWeight:600, marginBottom:8, textAlign:"center" }}>{b.nome}</div><GBarras dados={r.votos}/></div>}
-                      {!r&&<div style={{ fontSize:12, color:"#aaa", textAlign:"center", padding:"20px 0" }}>Sem resultados.</div>}
-                      <div style={{ fontSize:10, color:"#aaa", marginTop:16, borderTop:"1px solid #eee", paddingTop:10, textAlign:"center", fontStyle:"italic" }}>{RODAPE}</div>
-                    </div>
-                  );
-                })}
-              </div>
-            );
-          })}
+          <iframe title="Prévia do PDF Mirinho Tribuna" sandbox="" srcDoc={buildPdfHtml(p, fmtD, capa)} style={{ width:"100%", height:720, border:"1px solid #ddd", marginBottom:16, background:"white" }}/>
           <Btn v="green" onClick={baixarPDF} style={{ width:"100%", padding:12, fontSize:14, marginBottom:16 }}>⬇ Baixar PDF</Btn>
         </div>
       )}

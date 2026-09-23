@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { buildPdfHtml } from './pdf';
 import { pesquisaSimulada, redistribuirPercentuais } from './simulacao';
+import CapaEditor from './CapaEditor';
 
 const formatarData = d => d ? new Date(d + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
 const pct = n => `${n.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%`;
@@ -14,10 +15,11 @@ export default function ResultadoImportado({ pesquisa }) {
   const [erro, setErro] = useState('');
   const [mensagem, setMensagem] = useState('');
   const [editar, setEditar] = useState(false);
+  const [capa, setCapa] = useState({});
   const original = pesquisa.resultados[pergunta];
   const votos = ajustes[pergunta] || original?.votos || {};
   const simulado = Object.keys(ajustes).length > 0;
-  const html = useMemo(() => buildPdfHtml(pesquisaSimulada(pesquisa, ajustes), formatarData), [pesquisa, ajustes]);
+  const html = useMemo(() => buildPdfHtml(pesquisaSimulada(pesquisa, ajustes), formatarData, capa), [pesquisa, ajustes, capa]);
   function aplicar(e) {
     e.preventDefault(); setErro('');
     try {
@@ -32,6 +34,7 @@ export default function ResultadoImportado({ pesquisa }) {
   return <div className="imp-card">
     <h2>Resultado da prévia</h2>
     <p className="imp-muted">Relatório no modelo Mirinho Tribuna, com capa e gráficos gerais e por setor.</p>
+    <CapaEditor pesquisa={pesquisa} value={capa} onChange={setCapa}/>
     <div className="imp-actions">
       {perguntas.length > 0 && <button className="imp-secondary" onClick={() => setEditar(v => !v)} aria-expanded={editar}>{editar ? 'Fechar edição' : 'Simular percentuais'}</button>}
       {simulado && <button className="imp-secondary" onClick={restaurar}>Restaurar resultados originais</button>}

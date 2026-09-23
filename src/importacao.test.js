@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { analisar, gerarPesquisa, resumir } from './importacao.js';
 import { pesquisaSimulada, redistribuirPercentuais } from './simulacao.js';
 import { buildPdfHtml } from './pdf.js';
+import { dadosDaCapa, rotuloGrafico } from './capa.js';
 
 const linhas = [
   ['Carimbo de data/hora', 'Setor', '1- QUE NOTA DE 0 A 10?', '2- VOTARIA NOVAMENTE?', '3- CENÁRIO?', '4- CENÁRIO?'],
@@ -56,4 +57,20 @@ test('PDF usa o modelo compartilhado, marca simulação e preserva originais', (
   assert.ok(html.includes('&lt;CIDADE&gt;'));
   assert.equal((html.match(/<div class="simulacao-aviso">/g)||[]).length,9);
   assert.ok(!buildPdfHtml(p,d=>d).includes('Geral — SIMULAÇÃO'));
+});
+
+test('edições da capa não alteram perguntas, contagens, percentuais ou setores', () => {
+  const p = gerarPesquisa(analisar(linhas), ['Centro', 'Centro', 'Centro'], 'Cidade');
+  const antes = JSON.stringify(p);
+  const original = buildPdfHtml(p, d => d);
+  const editado = buildPdfHtml(p, d => d, {cidade:'Outra cidade',dataInicio:'2026-10-01',dataFim:'',totalEntrevistas:'300'});
+  assert.ok(editado.includes('OUTRA CIDADE'));
+  assert.ok(editado.includes('2026-10-01 (300 entrevistas)'));
+  // Todas as páginas após a capa permanecem byte a byte iguais.
+  assert.equal(editado.slice(editado.indexOf('<div class="page">')), original.slice(original.indexOf('<div class="page">')));
+  assert.equal(JSON.stringify(p), antes);
+  assert.equal(dadosDaCapa(p,{}).totalEntrevistas,3);
+  assert.equal(dadosDaCapa(p,{totalEntrevistas:0}).totalEntrevistas,0);
+  assert.equal(rotuloGrafico('BRANCOS/NULOS/INDECISOS'),'B/NU/IND');
+  assert.equal(rotuloGrafico('Outro nome comprido'),'Outro nome comprido');
 });
