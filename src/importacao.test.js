@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { analisar, gerarPesquisa, resumir } from './importacao.js';
 import { pesquisaSimulada, redistribuirPercentuais } from './simulacao.js';
-import { buildPdfHtml } from './pdf.js';
+import { buildPdfHtml, removerAvisoAntigo } from './pdf.js';
 import { dadosDaCapa, rotuloGrafico } from './capa.js';
 import { normalizarResposta, agruparResultado, agruparPesquisa } from './respostas.js';
 
@@ -102,4 +102,12 @@ test('resultados anteriores agrupam quantidades antes de arredondar; simulaçõe
   assert.equal(grouped.resultados._por_bairro.Centro[1].contagem['B/NU/IND'],2);
   assert.deepEqual(agruparPesquisa(grouped),grouped);
   assert.equal(JSON.stringify(r),antes);
+});
+
+test('aviso removido de novos relatórios e reimpressões do histórico', () => {
+  const aviso='A empresa Mirinho Tribuna não autoriza o contratante ou qualquer pessoa a levar este trabalho ao conhecimento público, seja qual for a forma, de acordo com a lei eleitoral.';
+  const p=gerarPesquisa(analisar(linhas),['Centro','Centro','Centro'],'Cidade');
+  assert.ok(!buildPdfHtml(p,d=>d).includes(aviso));
+  assert.equal(removerAvisoAntigo(`<div class="rodape">${aviso}</div><p>Resultado</p><div class="rodape">${aviso}</div>`),'<p>Resultado</p>');
+  assert.ok(removerAvisoAntigo(`<div class="rodape">SIMULAÇÃO — ${aviso}</div>`).includes('SIMULAÇÃO'));
 });

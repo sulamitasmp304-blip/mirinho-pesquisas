@@ -1,4 +1,4 @@
-import { buildPdfHtml, RODAPE } from './pdf';
+import { buildPdfHtml, removerAvisoAntigo } from './pdf';
 import CapaEditor from './CapaEditor';
 import { rotuloGrafico } from './capa';
 import { agruparPesquisa, normalizarResposta } from './respostas';
@@ -1103,7 +1103,7 @@ const PDFGerador = ({ pesquisas }) => {
   const reabrirPDF = (html) => {
     const win = window.open("","_blank");
     if(!win) { alert("Permita pop-ups."); return; }
-    win.document.write(html);
+    win.document.write(removerAvisoAntigo(html));
     win.document.close();
     win.focus();
     setTimeout(()=>{ win.print(); }, 800);

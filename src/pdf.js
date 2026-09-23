@@ -2,7 +2,8 @@ import { dadosDaCapa, rotuloGrafico } from './capa.js';
 import { agruparPesquisa } from './respostas.js';
 const CORES_G = ["#00b4d8","#4a4e69","#f4a261","#2ec4b6","#e63946","#8338ec","#06d6a0","#ffb703"];
 const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-export const RODAPE = "A empresa Mirinho Tribuna não autoriza o contratante ou qualquer pessoa a levar este trabalho ao conhecimento público, seja qual for a forma, de acordo com a lei eleitoral.";
+const AVISO_ANTIGO = "A empresa Mirinho Tribuna não autoriza o contratante ou qualquer pessoa a levar este trabalho ao conhecimento público, seja qual for a forma, de acordo com a lei eleitoral.";
+export const removerAvisoAntigo = html => String(html ?? '').split(AVISO_ANTIGO).join('').replace(/<div class="rodape">\s*<\/div>/g, '');
 
 export const buildPdfHtml = (p, fmtD, edicoesCapa = {}) => {
   p = agruparPesquisa(p);
@@ -10,7 +11,6 @@ export const buildPdfHtml = (p, fmtD, edicoesCapa = {}) => {
   const capa = dadosDaCapa(p, edicoesCapa);
   const simulando = Boolean(p.simulacao?.perguntas?.length);
   const aviso = simulando ? '<div class="simulacao-aviso">SIMULAÇÃO · Percentuais gerais ajustados manualmente. Resultados por setor preservados.</div>' : '';
-  const rodape = simulando ? 'SIMULAÇÃO — Este relatório contém percentuais ajustados manualmente. ' + RODAPE : RODAPE;
 
   // CAPA
   paginas.push(`
@@ -78,7 +78,6 @@ export const buildPdfHtml = (p, fmtD, edicoesCapa = {}) => {
         ${aviso}
         <div class="pergunta-titulo">${i+1}- ${escapeHtml(perg.texto)}</div>
         ${buildGrafico(perg, rGeral, p.simulacao?.perguntas?.includes(key) ? "Geral — SIMULAÇÃO" : "Geral")}
-        <div class="rodape">${rodape}</div>
       </div>
     `);
 
@@ -91,7 +90,6 @@ export const buildPdfHtml = (p, fmtD, edicoesCapa = {}) => {
           ${aviso}
           <div class="pergunta-titulo">${i+1}- ${escapeHtml(perg.texto)}</div>
           ${buildGrafico(perg, rBairro, b.nome)}
-          <div class="rodape">${rodape}</div>
         </div>
       `);
     });
@@ -104,7 +102,7 @@ export const buildPdfHtml = (p, fmtD, edicoesCapa = {}) => {
     .page{width:210mm;min-height:297mm;padding:30mm 25mm;position:relative;page-break-after:always;display:flex;flex-direction:column;}
     .capa{padding:12.7mm 12.7mm 12.7mm 15mm;text-align:center;align-items:stretch;justify-content:flex-start;}
     .capa-titulo{font-family:'Arial Black',Arial,sans-serif;font-size:65pt;font-weight:900;line-height:1.08;}
-    .capa-setores{margin-top:44pt;text-align:left;font-size:16pt;line-height:1.35;overflow-wrap:anywhere;}
+    .capa-setores{margin-top:44pt;text-align:center;font-size:16pt;line-height:1.35;overflow-wrap:anywhere;}
     .capa-setores>div{margin-bottom:4pt;break-inside:avoid;}
     .grafico-linha{display:grid;grid-template-columns:160px minmax(0,1fr) 50px;align-items:center;column-gap:12px;margin-bottom:12px;break-inside:avoid;}
     .grafico-rotulo{min-width:0;font-size:12px;text-align:right;font-weight:500;line-height:1.4;overflow-wrap:anywhere;word-break:normal;}
@@ -114,7 +112,6 @@ export const buildPdfHtml = (p, fmtD, edicoesCapa = {}) => {
     .cidade-title{font-family:'Arial Black',Arial,sans-serif;font-size:60pt;line-height:1.15;font-weight:900;color:#1F3864;overflow-wrap:anywhere;}
     .data-title{font-size:22pt;line-height:1.2;font-weight:700;margin-top:60pt;}
     .pergunta-titulo{font-size:14pt;font-weight:700;margin-bottom:20px;line-height:1.4;}
-    .rodape{position:absolute;bottom:15mm;left:25mm;right:25mm;font-size:8pt;color:#aaa;text-align:center;font-style:italic;border-top:1px solid #eee;padding-top:8px;}
     svg{display:block !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
     circle{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
     div[style*="background"]{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
