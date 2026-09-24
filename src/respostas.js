@@ -1,5 +1,5 @@
 const chave = nome => String(nome ?? '').trim().replace(/\s+/g, ' ').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s*\/\s*/g, '/');
-const equivalentes = new Set(['nao sabe', 'nenhum', 'ninguem', 'branco', 'nao tem', 'nao lembra o nome', 'nao sei', 'brancos/nulos/indecisos', 'b/nu/ind']);
+const equivalentes = new Set(['nao sabe', '.nao sabe', 'nenhum', 'ninguem', 'branco', 'nao tem', 'nao lembra o nome', 'nao sei', 'brancos/nulos/indecisos', 'b/nu/ind']);
 
 export function normalizarResposta(nome) {
   return equivalentes.has(chave(nome)) ? 'B/NU/IND' : String(nome ?? '').trim().replace(/\s+/g, ' ');

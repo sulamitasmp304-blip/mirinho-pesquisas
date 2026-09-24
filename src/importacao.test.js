@@ -79,6 +79,8 @@ test('edições da capa não alteram perguntas, contagens, percentuais ou setore
 test('regra B/NU/IND junta respostas por contagem sem incluir NÃO ou respostas vazias', () => {
   const equivalentes = ['Não sabe','Nenhum','Ninguém','Branco','Não tem','Não lembra o nome','Não sei','BRANCOS/NULOS/INDECISOS','B/NU/IND','  NAO   SEI  '];
   equivalentes.forEach(v => assert.equal(normalizarResposta(v), 'B/NU/IND'));
+  assert.equal(normalizarResposta('.não sabe'), 'B/NU/IND');
+  assert.equal(agruparResultado({votos:{'.não sabe':10,'B/NU/IND':20,SIM:70}}).votos['B/NU/IND'],30);
   ['NÃO','NÃO VOTEI NELE','Candidato Nenhum Silva',''].forEach(v => assert.equal(normalizarResposta(v),v));
   const m = analisar([['Setor','1- Em quem votaria?'],...equivalentes.map(v=>['Centro',v]),['Outro','SIM'],['Outro','NÃO'],['Outro','']]);
   const p = gerarPesquisa(m,['Centro','Outro'],'Cidade');

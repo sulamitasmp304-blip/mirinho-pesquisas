@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { buildPdfHtml } from './pdf';
 import { pesquisaSimulada, redistribuirPercentuais } from './simulacao';
 import CapaEditor from './CapaEditor';
+import PdfPreview from './PdfPreview';
 
 const formatarData = d => d ? new Date(d + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
 const pct = n => `${n.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%`;
@@ -60,6 +61,6 @@ export default function ResultadoImportado({ pesquisa }) {
     {simulado && <p className="imp-simulation-label">SIMULAÇÃO · Percentuais gerais ajustados manualmente. Resultados por setor mantidos conforme o Excel.</p>}
     {erro && <p role="alert" className="imp-error">{erro}</p>}
     {mensagem && <p role="status" className="imp-muted">{mensagem}</p>}
-    <iframe title="Prévia do PDF Mirinho Tribuna" sandbox="" srcDoc={html} style={{ width:'100%', height:720, border:'1px solid #ddd', marginTop:20, background:'white' }}/>
+    <PdfPreview html={html}/>
   </div>;
 }

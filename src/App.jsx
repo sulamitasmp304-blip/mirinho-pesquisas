@@ -1,5 +1,6 @@
 import { buildPdfHtml, removerAvisoAntigo } from './pdf';
 import CapaEditor from './CapaEditor';
+import PdfPreview from './PdfPreview';
 import { rotuloGrafico } from './capa';
 import { agruparPesquisa, normalizarResposta, ordenarGrafico } from './respostas';
 import { useState, useEffect, useCallback } from "react";
@@ -1141,7 +1142,7 @@ const PDFGerador = ({ pesquisas }) => {
             <div style={{ fontSize:13, fontWeight:600, color:"#1D9E75" }}>✓ Prévia — {p.cidade}</div>
             <Btn v="green" onClick={baixarPDF}>⬇ Baixar PDF</Btn>
           </div>
-          <iframe title="Prévia do PDF Mirinho Tribuna" sandbox="" srcDoc={buildPdfHtml(p, fmtD, capa)} style={{ width:"100%", height:720, border:"1px solid #ddd", marginBottom:16, background:"white" }}/>
+          <PdfPreview html={buildPdfHtml(p, fmtD, capa)}/>
           <Btn v="green" onClick={baixarPDF} style={{ width:"100%", padding:12, fontSize:14, marginBottom:16 }}>⬇ Baixar PDF</Btn>
         </div>
       )}
@@ -1312,7 +1313,7 @@ const PainelAdmin = ({ user, onLogout }) => {
       <Header/>
       <div style={{ display:"flex", minHeight:"calc(100vh - 53px)" }}>
         <Sidebar/>
-        <div style={{ flex:1, padding:16, maxWidth:700, margin:"0 auto", minWidth:0 }}>
+        <div style={{ flex:1, padding:16, maxWidth:aba==="importar"||aba==="pdf"?1100:700, margin:"0 auto", minWidth:0 }}>
           {form ? (
             <FormPesquisa key={form==="nova"?"nova":form?.id} inicial={form==="nova"?null:form} users={users} onSalvar={salvar} onCancelar={()=>setForm(null)}/>
           ) : (
