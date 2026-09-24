@@ -4,7 +4,7 @@ import { analisar, gerarPesquisa, resumir } from './importacao.js';
 import { pesquisaSimulada, redistribuirPercentuais } from './simulacao.js';
 import { buildPdfHtml, removerAvisoAntigo } from './pdf.js';
 import { dadosDaCapa, rotuloGrafico } from './capa.js';
-import { normalizarResposta, agruparResultado, agruparPesquisa } from './respostas.js';
+import { normalizarResposta, agruparResultado, agruparPesquisa, ordenarGrafico } from './respostas.js';
 
 const linhas = [
   ['Carimbo de data/hora', 'Setor', '1- QUE NOTA DE 0 A 10?', '2- VOTARIA NOVAMENTE?', '3- CENÁRIO?', '4- CENÁRIO?'],
@@ -110,4 +110,17 @@ test('aviso removido de novos relatórios e reimpressões do histórico', () => 
   assert.ok(!buildPdfHtml(p,d=>d).includes(aviso));
   assert.equal(removerAvisoAntigo(`<div class="rodape">${aviso}</div><p>Resultado</p><div class="rodape">${aviso}</div>`),'<p>Resultado</p>');
   assert.ok(removerAvisoAntigo(`<div class="rodape">SIMULAÇÃO — ${aviso}</div>`).includes('SIMULAÇÃO'));
+});
+
+test('B/NU/IND fica por último mesmo com o maior percentual e sem mudar valores', () => {
+  const votos={'B/NU/IND':60,A:10,B:30};
+  assert.deepEqual(ordenarGrafico(votos),[['B',30],['A',10],['B/NU/IND',60]]);
+  assert.deepEqual(ordenarGrafico({'BRANCOS/NULOS/INDECISOS':50,A:50}),[['A',50],['BRANCOS/NULOS/INDECISOS',50]]);
+  assert.deepEqual(ordenarGrafico({A:40,B:60}),[['B',60],['A',40]]);
+  assert.deepEqual(ordenarGrafico({}),[]);
+  assert.deepEqual(votos,{'B/NU/IND':60,A:10,B:30});
+  const p={cidade:'Cidade',totalEntrevistas:10,bairros:[{nome:'Centro'}],perguntas:[{id:1,texto:'Pergunta',tipo:'multipla'}],resultados:{1:{votos},_por_bairro:{Centro:{1:{votos}}}}};
+  const html=buildPdfHtml(p,d=>d);
+  const labels=[...html.matchAll(/class="grafico-rotulo">([^<]+)</g)].map(m=>m[1]);
+  assert.deepEqual(labels,['B','A','B/NU/IND','B','A','B/NU/IND']);
 });

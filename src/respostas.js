@@ -5,6 +5,14 @@ export function normalizarResposta(nome) {
   return equivalentes.has(chave(nome)) ? 'B/NU/IND' : String(nome ?? '').trim().replace(/\s+/g, ' ');
 }
 
+export function ordenarGrafico(valores = {}) {
+  return Object.entries(valores).sort(([nomeA, valorA], [nomeB, valorB]) => {
+    const aUltimo = normalizarResposta(nomeA) === 'B/NU/IND';
+    const bUltimo = normalizarResposta(nomeB) === 'B/NU/IND';
+    return Number(aUltimo) - Number(bUltimo) || valorB - valorA;
+  });
+}
+
 export function agruparValores(valores = {}) {
   const grupos = new Map();
   Object.entries(valores).forEach(([nome, quantidade]) => {

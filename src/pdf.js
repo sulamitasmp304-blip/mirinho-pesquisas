@@ -1,5 +1,5 @@
 import { dadosDaCapa, rotuloGrafico } from './capa.js';
-import { agruparPesquisa } from './respostas.js';
+import { agruparPesquisa, ordenarGrafico } from './respostas.js';
 const CORES_G = ["#00b4d8","#4a4e69","#f4a261","#2ec4b6","#e63946","#8338ec","#06d6a0","#ffb703"];
 const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const AVISO_ANTIGO = "A empresa Mirinho Tribuna não autoriza o contratante ou qualquer pessoa a levar este trabalho ao conhecimento público, seja qual for a forma, de acordo com a lei eleitoral.";
@@ -50,7 +50,7 @@ export const buildPdfHtml = (p, fmtD, edicoesCapa = {}) => {
           </div>
         </div>`;
     } else if (r?.votos) {
-      const entries = Object.entries(r.votos).sort((a,b)=>b[1]-a[1]);
+      const entries = ordenarGrafico(r.votos);
       const max = Math.max(...entries.map(e=>e[1]), 1);
       const bars = entries.map(([nome,pct],ci)=>`
         <div class="grafico-linha">

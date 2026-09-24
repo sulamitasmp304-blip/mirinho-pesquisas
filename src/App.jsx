@@ -1,7 +1,7 @@
 import { buildPdfHtml, removerAvisoAntigo } from './pdf';
 import CapaEditor from './CapaEditor';
 import { rotuloGrafico } from './capa';
-import { agruparPesquisa, normalizarResposta } from './respostas';
+import { agruparPesquisa, normalizarResposta, ordenarGrafico } from './respostas';
 import { useState, useEffect, useCallback } from "react";
 import ImportarExcel from './ImportarExcel';
 
@@ -99,7 +99,7 @@ const GRosca = ({ nota }) => {
   );
 };
 const GBarras = ({ dados }) => {
-  const entries = Object.entries(dados).sort((a,b)=>b[1]-a[1]);
+  const entries = ordenarGrafico(dados);
   const max = Math.max(...entries.map(e=>e[1]),1);
   return (
     <div style={{ padding:"8px 0" }}>
@@ -1630,7 +1630,7 @@ const PainelMirinho = ({ user, onLogout }) => {
                     </div>
                   )}
                   {r?.votos&&(
-                    <div>{Object.entries(r.votos).sort((a,b)=>b[1]-a[1]).map(([nome,pct],ci)=>(
+                    <div>{ordenarGrafico(r.votos).map(([nome,pct],ci)=>(
                       <div key={nome} style={{ display:"flex", alignItems:"center", gap:8, marginBottom:6 }}>
                         <div style={{ width:130, fontSize:12, textAlign:"right" }}>{nome}</div>
                         <div style={{ flex:1, background:"#F1EFE8", borderRadius:4, height:20, overflow:"hidden" }}>
@@ -1782,7 +1782,7 @@ const PainelCliente = ({ user, onLogout }) => {
                     </div>
                   )}
                   {r?.votos&&(
-                    <div>{Object.entries(r.votos).sort((a,b)=>b[1]-a[1]).map(([nome,pct],ci)=>(
+                    <div>{ordenarGrafico(r.votos).map(([nome,pct],ci)=>(
                       <div key={nome} style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8 }}>
                         <div style={{ width:130, fontSize:12, textAlign:"right", fontWeight:500 }}>{nome}</div>
                         <div style={{ flex:1, background:"#F1EFE8", borderRadius:4, height:22, overflow:"hidden" }}>
